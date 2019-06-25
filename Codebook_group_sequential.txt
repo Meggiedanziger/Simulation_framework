@@ -1,0 +1,19 @@
+nsubj				# maximum number of subjects available for testing
+
+d				# standardized effect (mean difference divided by standard deviation) used for simulation
+
+beta				# type II error used for calculation of bounds in gsDesign
+
+totalN				# total number of subjects (both groups) used for interim analysis at a certain stage
+
+delta_emp			# empirical standardized effect computed from simulated values
+
+t_value				# t-statistic that is computed at each stage
+
+p_value				# p-value computed at each stage (with gsDesign)
+
+df				# degrees of freedom that are calculated by t.test() because of unequal variances in the 2 groups
+
+stage				# stage in which an interim analysis yielded either an upper boundary crossing (= significant p-value) 				                # or a lower boundary crossing 
+				
+H0				# indicates whether trial was stopped for success (= 2), futility (= 1), or was continued to the next stage (= 0)

@@ -1,0 +1,13 @@
+Outcome variables
+
+- empirical effect size estimate
+
+- type I error rate (when d = 0)
+
+- power (when d != 0)
+
+- number of animals needed for success
+
+- number of animals needed for futility
+
+- percentage of experiments stopped for success / futility
