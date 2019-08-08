@@ -1,4 +1,4 @@
-setwd("~/Documents/QUEST/PhD/R/Simulation_framework/Simulation_framework")
+setwd("~/Documents/QUEST/PhD/R/Simulation_framework/Group_sequential_designs")
 
 
 rm(list = ls())
@@ -12,30 +12,35 @@ source("simulate_data_function_normal.R")
 #source("simulate_data_function_lognormal.R")
 
 ### load function to sample data for each stage
-source("sample_data_for_stages.R")
+source("sample_data_for_stages_function.R")
 
 
 ### determine bounds and critical values of the sequential design
 test_design <- gsDesign::gsDesign(k = 3, test.type = 3, alpha = 0.025, beta = .2,
-                                  delta = .5, n.fix = 36, timing = 1, 
-                                  sfu = sfHSD, sfupar = 0, sfl = sfHSD, sflpar = -2)
+                                  delta = 0.5, n.fix = NULL, timing = 1, 
+                                  sfu = sfHSD, sfupar = -4, sfl = sfHSD, sflpar = -4)
 
 test_design
 plot(test_design)
-plot(test_design, plottype = 2)
+plot(test_design, plottype = 5)
 
+y <- gsProbability(d = test_design, theta = c(0, .3, .5, .6, .75, .8, .9, 1))
+y
+plot(y, plottype = 2)
 
 nsubj = 36
 dinit = 0
 beta  = .2
 alpha = .05
 
-ds <- seq(dinit, 1.5, by = .5)
+ds <- c(dinit, .3, .5, .7, .75, .8, .9, 1)
 
-final_res <- matrix(NA, nrow = 100000000,
+
+final_res <- matrix(NA, nrow = 10000000,
                     ncol = 10,
                     dimnames = list(NULL, c("nsubj","d", "beta", "totalN", "delta_emp", "t_value", "p_value", 
                                             "df", "stage", "H0")))
+
 
 final_res_counter <- 1
 
@@ -48,11 +53,11 @@ start <- print(Sys.time())
 
 for (d in ds) {
   
-  for (i in 1:10000)
+  for (i in 1:1000)
     write.csv(file = paste("file_", i, "_", d, ".csv", sep = " "), simulate_data(nsubj = nsubj, d = d))
   
 
-  for (t in 1:10000) {
+  for (t in 1:1000) {
     stage_1_data <- data.frame(value = sample_data_1(t), group = c(rep("control", 6), rep("treatment", 6)))
     
     sim_data_sum <-
@@ -61,10 +66,11 @@ for (d in ds) {
       summarize(mean_group = mean(value),
                 sd_group   = sd(value))
     
+    # test_design$lower$prob[1, 1]    
     
     stage_1_test   <- t.test(value ~ group, data = stage_1_data, alternative = "two.sided")
-    sig1           <- stage_1_test$p.value <= test_design$upper$spend[1] 
-    sig1_lower     <- stage_1_test$p.value >= test_design$lower$prob[1, 1]    
+    sig1           <- stage_1_test$statistic >= test_design$upper$bound[1]
+    sig1_lower     <- stage_1_test$statistic <= test_design$lower$bound[1]
     totalN         <- nrow(stage_1_data)
     stage          <- 1
     delta_emp      <- as.numeric((sim_data_sum[1, 2] - sim_data_sum[2, 2]) / 
@@ -115,10 +121,11 @@ for (d in ds) {
         summarize(mean_group = mean(value),
                   sd_group   = sd(value))
       
+      # test_design$lower$prob[2, 1]  
       
       stage_2_test   <- t.test(value ~ group, data = stage_2_data, alternative = "two.sided")
-      sig2           <- stage_2_test$p.value <= test_design$upper$spend[2]
-      sig2_lower     <- stage_2_test$p.value >= test_design$lower$prob[2, 1]    
+      sig2           <- stage_2_test$statistic >= test_design$upper$bound[2]
+      sig2_lower     <- stage_2_test$statistic <= test_design$lower$bound[2]
       totalN         <- nrow(stage_2_data)
       stage          <- 2
       delta_emp      <- as.numeric((sim_data_sum[1, 2] - sim_data_sum[2, 2]) / 
@@ -169,10 +176,10 @@ for (d in ds) {
           summarize(mean_group = mean(value),
                     sd_group   = sd(value))
         
-
+        
         stage_3_test   <- t.test(value ~ group, data = stage_3_data, alternative = "two.sided")
-        sig3           <- stage_3_test$p.value <= test_design$upper$spend[3]
-        sig3_lower     <- stage_3_test$p.value >= test_design$lower$prob[3, 1]    
+        sig3           <- stage_3_test$statistic >= test_design$upper$bound[3]
+        sig3_lower     <- stage_3_test$statistic <= test_design$lower$bound[3]
         totalN         <- nrow(stage_3_data)
         stage          <- 3
         delta_emp      <- as.numeric((sim_data_sum[1, 2] - sim_data_sum[2, 2]) / 
@@ -295,11 +302,11 @@ final <-
   final %>% 
   filter(nsubj != "NA")
 
-#write.csv(final, file = "test_d0")
 
 
-write.csv(final, file = "final_3stages_power_0.8_with_futility_bounds_Pocock")
+#write.csv(final, file = "final_3stages_power_0.8_with_futility_bounds_OF_sflpar-4")
 
+write.csv(final, file = "final_3stages_power_0.8_with_futility_bounds_OF_sflpar-4_sfupar-6_d0")
 
 
 
